@@ -6,6 +6,7 @@ import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import Chat from "./pages/Chat.jsx";
 import Group from "./pages/Group.jsx";
+import '../App.css'
 import LoginSignUp from "./pages/Login-SignUp.jsx";
 
 const routes = createBrowserRouter([
