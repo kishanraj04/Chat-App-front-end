@@ -6,34 +6,44 @@ import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import Chat from "./pages/Chat.jsx";
 import Group from "./pages/Group.jsx";
-import '../App.css'
+import "../App.css";
 import LoginSignUp from "./pages/Login-SignUp.jsx";
+import { ProtectRoute } from "./Components/auth/ProtectRout.jsx";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element: <App />,
+    children: [
+      {
+        path:'/',
+        element:<Home/>
+      },
+      {
+        path: "/Chat/:ChatId",
+        element: <Chat />,
+      },
+      {
+        path: "/Group",
+        element: <Group />,
+      },
+    ],
   },
   {
-    path:'/about',
-    element:<About/>
+    path: "/about",
+    element: <About />,
   },
+
   {
-    path:'/Chat/:ChatId',
-    element:<Chat/>
+    path: "/Login-SignUp",
+    element: <LoginSignUp />,
   },
-  {
-    path:'/Group',
-    element:<Group/>
-  },
-  {
-    path:'/Login-SignUp',
-    element:<LoginSignUp/>
-  }
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <RouterProvider router={routes}>
-    <App />
-  </RouterProvider>
+  <ProtectRoute>
+    <RouterProvider router={routes}>
+      <App />
+    </RouterProvider>
+  </ProtectRoute>
 );
