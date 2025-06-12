@@ -1,0 +1,19 @@
+/* Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px; /* For horizontal scroll */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3B82F6; /* Tailwind blue-500 */
+  border-radius: 6px;
+}
+
+/* Optional: Firefox support */
+.custom-scrollbar {
+  scrollbar-color: #3B82F6 #f1f1f1;
+  scrollbar-width: thin;
+}

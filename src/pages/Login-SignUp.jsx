@@ -1,12 +1,19 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoCameraReverseOutline } from "react-icons/io5";
+import axios from "axios";
+import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from "react-redux";
+import { isUserExist } from "../store/reducers/authSlice";
+import { isUserPresent } from "../helper/isUserExist";
 
 const LoginSignUp = () => {
   const [isSignIn, setIsSignIn] = useState(true);
+  const dispatch = useDispatch()
   const [previewUrl, setPreviewUrl] = useState(null);
-
+  const [logincred,setLoginCred] = useState({});
   const navigate = useNavigate();
+  const baseUrl="http://localhost:3000/api/v1";
 
   const nameRef = useRef();
   const passwordRef = useRef();
@@ -17,7 +24,21 @@ const LoginSignUp = () => {
     const name = nameRef.current?.value;
     const password = passwordRef.current?.value;
     const bio = bioRef.current?.value;
+    setLoginCred({name,password});
+
+    const loginresp = await axios.post(`${baseUrl}/user/login`,{name,password},{withCredentials:true})
+      if(loginresp?.data?.success){
+        toast.success("user login")
+        dispatch(isUserExist(loginresp?.data))
+        navigate("/home")
+      }
   };
+  
+  const state = useSelector((state)=>state?.auth)
+  
+  useEffect(()=>{
+    const isExist = isUserPresent(state,navigate)
+  },[state])
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];

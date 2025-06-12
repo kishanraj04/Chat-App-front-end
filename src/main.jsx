@@ -9,41 +9,41 @@ import Group from "./pages/Group.jsx";
 import "../App.css";
 import LoginSignUp from "./pages/Login-SignUp.jsx";
 import { ProtectRoute } from "./Components/auth/ProtectRout.jsx";
+import { GlobalContextProvider } from "./context/GlobalContext.jsx";
+import store from "./store/mystore.jsx";
+import { Provider } from "react-redux";
+import { ToastContainer } from "react-toastify";
 
 const routes = createBrowserRouter([
   {
     path: "/",
+    element: <LoginSignUp />,
+  },
+  ,
+  {
+    path: "/home",
     element: <App />,
     children: [
-      {
-        path:'/',
-        element:<Home/>
-      },
-      {
-        path: "/Chat/:ChatId",
-        element: <Chat />,
-      },
-      {
-        path: "/Group",
-        element: <Group />,
-      },
+      { path: "/home", element: <Home /> },
+      { path: "/home/Chat/:ChatId", element: <Chat /> },
+      { path: "/home/Group", element: <Group /> },
     ],
   },
   {
     path: "/about",
     element: <About />,
-  },
-
-  {
-    path: "/Login-SignUp",
-    element: <LoginSignUp />,
-  },
+  }
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <ProtectRoute>
-    <RouterProvider router={routes}>
-      <App />
-    </RouterProvider>
-  </ProtectRoute>
+  <StrictMode>
+    <GlobalContextProvider>
+      <Provider store={store}>
+        <ProtectRoute>
+          <RouterProvider router={routes} />
+        </ProtectRoute>
+      </Provider>
+    </GlobalContextProvider>
+      <ToastContainer position="top-right" autoClose={3000} />
+  </StrictMode>
 );
