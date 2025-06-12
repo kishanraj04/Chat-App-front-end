@@ -39,11 +39,11 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <GlobalContextProvider>
       <Provider store={store}>
-        <ProtectRoute>
+     
           <RouterProvider router={routes} />
-        </ProtectRoute>
+       
       </Provider>
     </GlobalContextProvider>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={1000} />
   </StrictMode>
 );

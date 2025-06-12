@@ -38,8 +38,16 @@ const authSlice = createSlice({
       state.joindate = formattedDate;
       state.isloading = false;
     },
+    resetUser: (state, action) => {
+      state.user= null,
+   state.avatar= null,
+   state.bio=null,
+   state.isAdmin= false,
+   state.isloading= true,
+   state.joindate= ""
+    },
   },
 });
 
 export default authSlice;
-export const { isUserExist } = authSlice.actions;
+export const { isUserExist,resetUser } = authSlice.actions;

@@ -16,7 +16,7 @@ function Profile() {
         </div>
 
         <p>{user || "unkonwn"}</p>
-        <p>Proffession</p>
+        <p>{bio}</p>
       </div>
 
       {/* files */}

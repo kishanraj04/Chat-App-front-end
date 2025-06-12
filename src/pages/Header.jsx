@@ -6,12 +6,18 @@ import { IoNotificationsCircleOutline } from "react-icons/io5";
 import { customMenuHandler } from "../Utils/CustomMenuHandler";
 import CustomContextMenu from "../Components/common/ContextMenu";
 import { GlobalContext } from "../context/GlobalContext";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { resetUser } from "../store/reducers/authSlice";
 
 const ChatHeader = () => {
   const { axis, setAxis } = useContext(GlobalContext);
-  const {avatar} = useSelector((state)=>state?.auth)
-  
+  const { avatar } = useSelector((state) => state?.auth);
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const baseUrl="http://localhost:3000/api/v1";
   return (
     <>
       <header
@@ -30,34 +36,57 @@ const ChatHeader = () => {
           />
           <div className="grid grid-cols-6 gap-4 justify-end items-center w-[35%]">
             <CiSearch size={"2rem"} />
-            <CiCirclePlus size={"2rem"} onClick={(e) => customMenuHandler(e, setAxis)}/>
-            <IoIosContacts size={"2rem"} onClick={(e) => customMenuHandler(e, setAxis)}/>
+            <CiCirclePlus
+              size={"2rem"}
+              onClick={(e) => customMenuHandler(e, setAxis)}
+            />
+            <IoIosContacts
+              size={"2rem"}
+              onClick={(e) => customMenuHandler(e, setAxis)}
+            />
             <IoNotificationsCircleOutline
               size={"2rem"}
               onClick={(e) => customMenuHandler(e, setAxis)}
             />
-            <IoMdLogOut size={"2rem"} />
+            <IoMdLogOut size={"2rem"} onClick={async()=>{
+              try {
+                const logoutresp = await axios.get(`${baseUrl}/user/logout`,{withCredentials:true})
+                if(logoutresp?.data?.success){
+                  toast.error("user logout")
+                  dispatch(resetUser())
+                  navigate("/")
+                }
+              } catch (error) {
+                console.log(error?.message);
+              }
+            }}/>
           </div>
         </div>
 
         <div className="flex justify-around items-center pr-4">
-          <div className="rounded-full border-[1px] flex justify-center items-center h-[80%] w-[3rem] text-xs">
-            <img src={avatar} alt="" className="rounded-full border-[1px] flex justify-center items-center h-[100%] w-[3rem] text-xs"/>
+          <div className="rounded-full border w-[3rem] h-[3rem] overflow-hidden flex justify-center items-center">
+            <img
+              src={avatar}
+              alt="avatar"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </header>
 
-      {
-        (axis.xaxis || axis.yaxis)!=0 && axis.flag ? <div
-        className="absolute"
-        style={{
-          top: `${axis.yaxis}px`,
-          left: `${axis.xaxis}px`,
-        }}
-      >
-        <CustomContextMenu />
-      </div> :""
-      }
+      {(axis.xaxis || axis.yaxis) != 0 && axis.flag ? (
+        <div
+          className="absolute"
+          style={{
+            top: `${axis.yaxis}px`,
+            left: `${axis.xaxis}px`,
+          }}
+        >
+          <CustomContextMenu />
+        </div>
+      ) : (
+        ""
+      )}
     </>
   );
 };
