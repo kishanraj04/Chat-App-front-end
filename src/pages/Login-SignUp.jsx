@@ -14,7 +14,17 @@ const LoginSignUp = () => {
   const [logincred,setLoginCred] = useState({});
   const navigate = useNavigate();
   const baseUrl="http://localhost:3000/api/v1";
-
+  useEffect(() => {
+      (async () => {
+        try {
+          const { data } = await axios.get(`${baseUrl}/user/direct-login`, {
+            withCredentials: true,
+          });
+          console.log(data);
+          dispatch(isUserExist(data));
+        } catch (error) {}
+      })();
+    }, []);
   const nameRef = useRef();
   const passwordRef = useRef();
   const bioRef = useRef();
@@ -26,12 +36,19 @@ const LoginSignUp = () => {
     const bio = bioRef.current?.value;
     setLoginCred({name,password});
 
-    const loginresp = await axios.post(`${baseUrl}/user/login`,{name,password},{withCredentials:true})
+   try {
+     const loginresp = await axios.post(`${baseUrl}/user/login`,{name,password},{withCredentials:true})
+    console.log("LR ",loginresp);
       if(loginresp?.data?.success){
         toast.success("user login")
         dispatch(isUserExist(loginresp?.data))
         navigate("/home")
       }
+   } catch (error) {
+      if(error){
+        toast.error("invalid credentials")
+      }
+   }
   };
   
   const state = useSelector((state)=>state?.auth)

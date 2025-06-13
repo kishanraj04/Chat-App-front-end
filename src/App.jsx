@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { isUserExist } from './store/reducers/authSlice'
 import { useDispatch, useSelector } from 'react-redux'
+import { useMyChatQuery } from './store/api/api'
 function App() {
 
   const baseUrl = "http://localhost:3000/api/v1";
@@ -24,7 +25,10 @@ function App() {
       document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, [isloading]);
-
+  
+  const {isloading:chatloding,isError,data} = useMyChatQuery()
+  console.log(data);
+  
   // direct login
   useEffect(() => {
     (async () => {
@@ -32,7 +36,7 @@ function App() {
         const { data } = await axios.get(`${baseUrl}/user/direct-login`, {
           withCredentials: true,
         });
-        console.log(data);
+       
         dispatch(isUserExist(data));
       } catch (error) {}
     })();

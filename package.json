@@ -28,6 +28,7 @@
     "react-router-dom": "^7.6.0",
     "react-toastify": "^11.0.5",
     "redux": "^5.0.1",
+    "rtk": "^3.1.1",
     "socket.io-client": "^4.8.1",
     "tailwind-scrollbar": "^4.0.2"
   },
