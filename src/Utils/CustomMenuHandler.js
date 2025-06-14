@@ -1,7 +1,7 @@
-export const customMenuHandler = (e, setAxis) => {
+export const customMenuHandler = (e, setAxis,isSearchUser) => {
   setAxis(prev => ({
-    xaxis: e.clientX,
-    yaxis: e.clientY + 20,
+    xaxis: isSearchUser?e.clientX-190:e.clientX,
+    yaxis: e.clientY + 30,
     flag: !prev.flag, 
   }));
 };

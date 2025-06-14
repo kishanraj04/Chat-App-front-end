@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { CiCirclePlus, CiSearch } from "react-icons/ci";
 import { IoIosContacts, IoMdLogOut } from "react-icons/io";
@@ -11,13 +11,23 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { resetUser } from "../store/reducers/authSlice";
+import { useLazySearchUserQuery } from "../store/api/api";
+import {
+  setClickedElement,
+  setSearchUserName,
+} from "../store/reducers/tmpvariable";
 
 const ChatHeader = () => {
   const { axis, setAxis } = useContext(GlobalContext);
+  const userref = useRef();
   const { avatar } = useSelector((state) => state?.auth);
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
-  const baseUrl="http://localhost:3000/api/v1";
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [triggerSearch, { isError, isLoading, data }] =
+    useLazySearchUserQuery();
+
+  const baseUrl = "http://localhost:3000/api/v1";
+
   return (
     <>
       <header
@@ -29,37 +39,79 @@ const ChatHeader = () => {
         <div className="flex justify-end items-center">
           <input
             type="text"
-            name=""
+            name="user"
             id=""
+            ref={userref}
             placeholder="Search User"
             className="border-[1px] h-[50%] w-[10rem] rounded-2xl outline-0"
           />
           <div className="grid grid-cols-6 gap-4 justify-end items-center w-[35%]">
-            <CiSearch size={"2rem"} />
+            <CiSearch
+              size={"2rem"}
+              id="search"
+              onClick={async (e) => {
+                dispatch(setClickedElement(e.currentTarget.id));
+
+                if (userref?.current?.value === "") {
+                  toast.error("please enter the name");
+                  return;
+                }
+
+                dispatch(setSearchUserName(userref?.current?.value));
+                const response = await triggerSearch(
+                  userref?.current?.value
+                ).unwrap();
+
+                customMenuHandler(e, setAxis, true);
+              }}
+            />
+
             <CiCirclePlus
               size={"2rem"}
-              onClick={(e) => customMenuHandler(e, setAxis)}
+              id="friendreq"
+              onClick={(e) => {
+                dispatch(setClickedElement(e.currentTarget.id));
+                customMenuHandler(e, setAxis);
+              }}
             />
+
             <IoIosContacts
               size={"2rem"}
-              onClick={(e) => customMenuHandler(e, setAxis)}
+              id="friend"
+              onClick={(e) => {
+                dispatch(setClickedElement(e.currentTarget.id));
+                customMenuHandler(e, setAxis);
+              }}
             />
+
             <IoNotificationsCircleOutline
               size={"2rem"}
-              onClick={(e) => customMenuHandler(e, setAxis)}
+              id="notification"
+              onClick={(e) => {
+                dispatch(setClickedElement(e.currentTarget.id));
+                customMenuHandler(e, setAxis);
+              }}
             />
-            <IoMdLogOut size={"2rem"} onClick={async()=>{
-              try {
-                const logoutresp = await axios.get(`${baseUrl}/user/logout`,{withCredentials:true})
-                if(logoutresp?.data?.success){
-                  toast.error("user logout")
-                  dispatch(resetUser())
-                  navigate("/")
+
+            <IoMdLogOut
+              size={"2rem"}
+              id="logout"
+              onClick={async () => {
+                try {
+                  const logoutresp = await axios.get(`${baseUrl}/user/logout`, {
+                    withCredentials: true,
+                  });
+
+                  if (logoutresp?.data?.success) {
+                    toast.error("user logout");
+                    dispatch(resetUser());
+                    navigate("/");
+                  }
+                } catch (error) {
+                  console.log(error?.message);
                 }
-              } catch (error) {
-                console.log(error?.message);
-              }
-            }}/>
+              }}
+            />
           </div>
         </div>
 

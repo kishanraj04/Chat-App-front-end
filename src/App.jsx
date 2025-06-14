@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import { isUserExist } from './store/reducers/authSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useMyChatQuery } from './store/api/api'
+import SearchedUser from './Components/search/SearchedUser'
 function App() {
 
   const baseUrl = "http://localhost:3000/api/v1";
