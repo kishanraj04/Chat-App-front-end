@@ -11,7 +11,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { resetUser } from "../store/reducers/authSlice";
-import { useLazySearchUserQuery } from "../store/api/api";
+import { useLazySearchUserQuery, useSendFrRequestMutation } from "../store/api/api";
 import {
   setClickedElement,
   setSearchUserName,

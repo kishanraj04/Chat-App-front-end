@@ -3,7 +3,7 @@ import {createApi,fetchBaseQuery} from "@reduxjs/toolkit/query/react"
 const api = createApi({
     reducerPath:"api",
     baseQuery:fetchBaseQuery({baseUrl:"http://localhost:3000/api/v1/"}),
-    tagTypes:["chat","user"],
+    tagTypes:["chat","user","friendreq"],
     endpoints:(builder)=>({
         myChat:builder.query({
             query:()=>({
@@ -19,10 +19,27 @@ const api = createApi({
                 credentials:"include"
             }),
             providesTags:["user"]
+        }),
+        sendFrRequest:builder.mutation({
+            query:(id)=>({
+                url:`user/sendrequest`,
+                credentials:"include",
+                method:"PUT",
+                body:{userId:id}
+            }),
+            invalidatesTags:["friendreq"]
+        }),
+        allRequest:builder.query({
+            query:()=>({
+                url:"user/all-request",
+                method:"GET",
+                credentials:"include"
+            }),
+            providesTags:["friendreq"]
         })
     })
 })
 
 
 export default api;
-export const {useMyChatQuery,useLazySearchUserQuery} = api
+export const {useMyChatQuery,useLazySearchUserQuery,useShowFriendRequestQuery,useSendFrRequestMutation,useAllRequestQuery} = api
