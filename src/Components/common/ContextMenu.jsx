@@ -3,6 +3,7 @@ import api, { useLazySearchUserQuery } from "../../store/api/api";
 import { data } from "react-router-dom";
 import { useSelector } from "react-redux";
 import SearchUserDropDown from "./SearchUserDropDown";
+import NotificationDropDown from "./NotificationDropDown";
 
 function CustomContextMenu() {
   const { searchusername, clickedelement } = useSelector((state) => state.tmp);
@@ -16,7 +17,7 @@ function CustomContextMenu() {
         :clickedelement=="friendreq"
         ? "friendreq"
         :clickedelement=="notification"
-        ?"notification"
+        ?<NotificationDropDown/>
         : "nothing"}
     </div>
   );

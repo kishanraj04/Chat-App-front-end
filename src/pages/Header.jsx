@@ -11,7 +11,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { resetUser } from "../store/reducers/authSlice";
-import { useLazySearchUserQuery, useSendFrRequestMutation } from "../store/api/api";
+import { useGetFirendRequestMutation, useLazySearchUserQuery, useSendFrRequestMutation } from "../store/api/api";
 import {
   setClickedElement,
   setSearchUserName,
@@ -20,12 +20,12 @@ import {
 const ChatHeader = () => {
   const { axis, setAxis } = useContext(GlobalContext);
   const userref = useRef();
-  const { avatar } = useSelector((state) => state?.auth);
+  const { avatar,_id} = useSelector((state) => state?.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [triggerSearch, { isError, isLoading, data }] =
     useLazySearchUserQuery();
-
+ 
   const baseUrl = "http://localhost:3000/api/v1";
 
   return (
@@ -89,6 +89,7 @@ const ChatHeader = () => {
               id="notification"
               onClick={(e) => {
                 dispatch(setClickedElement(e.currentTarget.id));
+                
                 customMenuHandler(e, setAxis);
               }}
             />

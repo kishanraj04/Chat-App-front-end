@@ -5,6 +5,14 @@ const api = createApi({
     baseQuery:fetchBaseQuery({baseUrl:"http://localhost:3000/api/v1/"}),
     tagTypes:["chat","user","friendreq"],
     endpoints:(builder)=>({
+        loginUser:builder.mutation({
+            query:(data)=>({
+                url:"user/login",
+                method:"POST",
+                body:data,
+                credentials:"include"
+            })
+        }),
         myChat:builder.query({
             query:()=>({
                 url:"/chat/my-chats",
@@ -36,10 +44,44 @@ const api = createApi({
                 credentials:"include"
             }),
             providesTags:["friendreq"]
+        }),
+        getFirendRequest:builder.mutation({
+            query:({requestId,accept})=>({
+                url:"user/acceptrequest",
+                method:"PUT",
+                body:{requestId,accept},
+                credentials:"include"
+            }),
+            invalidatesTags:["friendreq"],
+            keepUnusedDataFor:0
+        }),
+        getYourRequestNotification:builder.query({
+            query:()=>({
+                url:"user/notifications",
+                credentials:"include",
+                method:"GET"
+            }),
+            providesTags:["friendreq"]
+        }),
+        newUser:builder.mutation({
+            query:(data)=>({
+                url:"user/register",
+                method:"POST",
+                credentials:"include",
+                body:data
+            })
+        }),
+        deleteRequest:builder.mutation({
+            query:(data)=>({
+                url:"request/remove",
+                method:"POST",
+                credentials:"include",
+                body:data
+            })
         })
     })
 })
 
 
 export default api;
-export const {useMyChatQuery,useLazySearchUserQuery,useShowFriendRequestQuery,useSendFrRequestMutation,useAllRequestQuery} = api
+export const {useMyChatQuery,useLazySearchUserQuery,useShowFriendRequestQuery,useSendFrRequestMutation,useAllRequestQuery,useGetFirendRequestMutation,useGetYourRequestNotificationQuery,useNewUserMutation,useLoginUserMutation,useDeleteRequestMutation} = api

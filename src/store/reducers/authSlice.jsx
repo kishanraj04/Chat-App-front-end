@@ -8,6 +8,7 @@ const options = {
 
 const initialState = {
   user: null,
+  _id:null,
   avatar: null,
   bio: null,
   isAdmin: false,
@@ -37,6 +38,7 @@ const authSlice = createSlice({
       state.bio = user?.bio;
       state.joindate = formattedDate;
       state.isloading = false;
+      state._id=user?._id
     },
     resetUser: (state, action) => {
       state.user= null,
