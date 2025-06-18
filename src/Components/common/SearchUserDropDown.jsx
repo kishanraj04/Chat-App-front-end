@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import api, {
   useAllRequestQuery,
+  useDeleteRequestMutation,
   useSendFrRequestMutation,
 } from "../../store/api/api";
 
@@ -18,10 +19,10 @@ function SearchUserDropDown() {
 
   // Mutation to send friend request
   const [sendFrReq] = useSendFrRequestMutation();
-
+  const [requdeleteapi] =  useDeleteRequestMutation()
   // Get all friend requests
   const { data: allrequest } = useAllRequestQuery();
-
+  console.log(allrequest);
   // Loading state
   if (isLoading) {
     return (
@@ -95,7 +96,11 @@ function SearchUserDropDown() {
               className="hover:scale-110 transition-transform"
             >
               {alreadySent ? (
-                <GrSubtractCircle size="1.8rem" className="text-red-500" />
+                <GrSubtractCircle size="1.8rem" className="text-red-500" onClick={async()=>{
+                  console.log(_id);
+                  const deleteresp = await requdeleteapi({_id})
+                  console.log(deleteresp);
+                }}/>
               ) : (
                 <CiCirclePlus size="1.8rem" className="text-blue-500" />
               )}

@@ -73,11 +73,12 @@ const api = createApi({
         }),
         deleteRequest:builder.mutation({
             query:(data)=>({
-                url:"request/remove",
-                method:"POST",
+                url:"user/remove/request",
+                method:"DELETE",
                 credentials:"include",
                 body:data
-            })
+            }),
+            invalidatesTags:["friendreq"]
         })
     })
 })
