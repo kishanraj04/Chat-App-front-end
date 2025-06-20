@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 function Profile() {
   const { avatar, user, bio,joindate} = useSelector((state) => state?.auth);
   return (
-    <div className="flex flex-col gap-[5rem] font-semibold font-serif">
+    <div className="flex flex-col gap-[5rem] font-semibold font-serif ">
       {/* profile images */}
       <div className="flex flex-col justify-center items-center">
         <div className="h-[10rem] w-[10rem] rounded-full overflow-hidden border">

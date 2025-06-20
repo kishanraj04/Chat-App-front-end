@@ -13,6 +13,7 @@ import { GlobalContextProvider } from "./context/GlobalContext.jsx";
 import store from "./store/mystore.jsx";
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
+import { SocketProvider } from "./context/SocketProvider.jsx";
 
 const routes = createBrowserRouter([
   {
@@ -36,14 +37,16 @@ const routes = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  <>
     <GlobalContextProvider>
-      <Provider store={store}>
+      <SocketProvider>
+        <Provider store={store}>
      
           <RouterProvider router={routes} />
        
       </Provider>
+      </SocketProvider>
     </GlobalContextProvider>
       <ToastContainer position="top-right" autoClose={1000} />
-  </StrictMode>
+  </>
 );

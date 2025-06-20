@@ -9,6 +9,7 @@ import { isUserExist } from './store/reducers/authSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { useMyChatQuery } from './store/api/api'
 import SearchedUser from './Components/search/SearchedUser'
+import { getSocket } from './context/SocketProvider'
 function App() {
 
   const baseUrl = "http://localhost:3000/api/v1";
@@ -28,7 +29,7 @@ function App() {
   }, [isloading]);
   
   const {isloading:chatloding,isError,data} = useMyChatQuery()
-  console.log(data);
+
   
   // direct login
   useEffect(() => {
@@ -50,6 +51,7 @@ function App() {
   //         console.log(user);
   //       })()
   // },[])
+
 
   return (
     <div >

@@ -3,7 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   searchusername:"",
-  clickedelement:""
+  clickedelement:"",
+  chatId:"",
+  members:[]
 };
 
 const tmpvar = createSlice({
@@ -16,9 +18,15 @@ const tmpvar = createSlice({
     setClickedElement:(state,action)=>{
         
         state.clickedelement = action.payload
+    },
+    setChatId:(state,action)=>{
+      state.chatId = action.payload
+    },
+    setMembers:(state,action)=>{
+      state.members = [...action.payload]
     }
   }
 });
 
 export default tmpvar;
-export const { setSearchUserName,setClickedElement} = tmpvar.actions;
+export const { setSearchUserName,setClickedElement,setChatId,setMembers} = tmpvar.actions;

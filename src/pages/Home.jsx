@@ -9,9 +9,9 @@ function Home() {
     <div className="grid" style={{ gridTemplateColumns: "22% 48% 30%" }}>
       {/* chat list */}
       <div className="flex  flex-col gap-2 overflow-y-scroll border-r-[1px] h-[91vh]">
-        {dummy.map((data, idx) => (
-          <ChatList key={idx} data={data} />
-        ))}
+        
+          <ChatList  />
+        
       </div>
 
       {/* chat screen */}
@@ -20,7 +20,7 @@ function Home() {
       </div>
 
       {/* profile */}
-      <div className="flex justify-center items-center border-l-[1px] h-[92vh] bg-red-200">
+      <div className="flex justify-center items-center border-l-[1px] h-[92vh] bg-neutral-800 text-gray-400">
         <Profile />
       </div>
     </div>
