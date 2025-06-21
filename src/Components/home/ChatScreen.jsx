@@ -6,38 +6,59 @@ import { useGetChatMessagesQuery } from "../../store/api/api";
 
 function ChatScreen() {
   const fileInputRef = useRef(null);
-  const [msg,setMsg] = useState("");
+  const messageEndRef = useRef(null);
+  const [msg, setMsg] = useState("");
   const [messages, setMessages] = useState([]);
-  const [page,setPage] = useState(1);
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
   const socket = getSocket();
 
   const { chatId, members } = useSelector((state) => state.tmp);
   const { _id } = useSelector((state) => state.auth);
-  // 👂 Listen for new messages once on mount
-  const {data:userchats} = useGetChatMessagesQuery({chatId,page})
-  console.log(userchats?.message);
-  // useEffect(())
-  console.log(userchats);
+
+  const {
+    data: userchats,
+    refetch,
+    isFetching,
+  } = useGetChatMessagesQuery({ chatId, page }, { skip: !chatId });
+
+  // Load new page when 'page' changes
+  useEffect(() => {
+    if (!chatId) return;
+    const fetchMore = async () => {
+      setIsFetchingMore(true);
+      const res = await refetch();
+      const newMessages = res?.data?.message || [];
+      if (newMessages.length > 0) {
+        setMessages((prev) => [...newMessages, ...prev]);
+      }
+      setIsFetchingMore(false);
+    };
+    fetchMore();
+  }, [page, chatId, refetch]);
+
+  useEffect(()=>{
+   setPage(1);
+  },[chatId])
+  // Handle socket new message
   useEffect(() => {
     if (!socket) return;
-    if(userchats?.message){
-      setMessages((prev)=>[...userchats?.message,...prev])
-    }
+
     const handleNewMessage = (data) => {
-      setMessages((prev) => [...prev, data?.message]);
+      const msg = data?.message;
+      if (msg?.chat === chatId) {
+        setMessages((prev) => [...prev, msg]);
+      }
     };
 
     socket.on("NEW_MESSAGE", handleNewMessage);
-
-    // 🧹 Cleanup on unmount
-    return () => {
-      socket.off("NEW_MESSAGE", handleNewMessage);
-    };
-  }, [socket,userchats?.message]);
+    return () => socket.off("NEW_MESSAGE", handleNewMessage);
+  }, [socket, chatId]);
 
   const sendMessage = () => {
-    if (!msg?.trim()) return;
-    
+    if (!msg.trim()) return;
+
     const allMembers = [...members, _id];
     socket.emit("NEW_MESSAGE", {
       chatId,
@@ -45,17 +66,24 @@ function ChatScreen() {
       message: msg,
     });
 
-    // setMessage(""); // clear input
+    setMsg("");
   };
+
   const handleAttachmentClick = () => {
     fileInputRef.current.click();
   };
 
+  const handleScroll = (e) => {
+    const scrollTop = e.target.scrollTop;
+    if (scrollTop < 15 && !isFetchingMore && userchats?.totalPage > page) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="flex flex-col justify-between h-[92vh] w-full bg-[#f0f3f8]">
-      {/* Empty Chat Area */}
-      <div className="overflow-y-scroll">
-        {/* <p>hii</p> */}
+      {/* Message Area */}
+      <div className="overflow-y-scroll" onScroll={handleScroll}>
         <div className="p-3 flex flex-col gap-1">
           {messages?.map(({ content, sender, chat }, index) =>
             chat === chatId ? (
@@ -71,6 +99,7 @@ function ChatScreen() {
               </p>
             ) : null
           )}
+          <div ref={messageEndRef} />
         </div>
       </div>
 
@@ -79,12 +108,11 @@ function ChatScreen() {
         <input
           type="text"
           value={msg}
-          onChange={(e)=>setMsg(e.target.value)}
+          onChange={(e) => setMsg(e.target.value)}
           placeholder="Write Something..."
           className="flex-1 p-2 rounded-full border outline-none text-sm"
         />
 
-        {/* Hidden file input */}
         <input
           type="file"
           ref={fileInputRef}
@@ -92,7 +120,6 @@ function ChatScreen() {
           onChange={(e) => console.log("Selected file:", e.target.files[0])}
         />
 
-        {/* Attachment Button */}
         <button
           onClick={handleAttachmentClick}
           className="text-gray-500 hover:text-blue-500"
@@ -100,7 +127,6 @@ function ChatScreen() {
           <Paperclip size={20} />
         </button>
 
-        {/* Send Button */}
         <button
           onClick={sendMessage}
           className="bg-[#3e8ef7] p-2 rounded-full text-white hover:bg-blue-600"
