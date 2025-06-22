@@ -4,7 +4,7 @@ import { useGetFirendRequestMutation, useGetYourRequestNotificationQuery } from 
 function NotificationDropDown({ avatarUrl, onAccept, onReject }) {
 
   const {_id} = useSelector((state)=>state.auth)
-  console.log("run");
+  
   const {data:notification} = useGetYourRequestNotificationQuery()
    const [triggerGetFriendReq,friendReqRes] = useGetFirendRequestMutation()
   

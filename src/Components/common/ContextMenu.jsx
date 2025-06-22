@@ -4,10 +4,11 @@ import { data } from "react-router-dom";
 import { useSelector } from "react-redux";
 import SearchUserDropDown from "./SearchUserDropDown";
 import NotificationDropDown from "./NotificationDropDown";
+import ChooseFile from "./FileChoose";
 
 function CustomContextMenu() {
   const { searchusername, clickedelement } = useSelector((state) => state.tmp);
- 
+  console.log(clickedelement);
   return (
     <div className="h-[15rem] w-[15rem] overflow-auto">
       {clickedelement === "search"
@@ -18,7 +19,9 @@ function CustomContextMenu() {
         ? "friendreq"
         :clickedelement=="notification"
         ?<NotificationDropDown/>
-        : "nothing"}
+        :clickedelement=="file"
+        ?<ChooseFile/>
+        : ""}
     </div>
   );
 }

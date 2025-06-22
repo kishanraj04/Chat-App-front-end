@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Paperclip, Send } from "lucide-react";
 import { getSocket } from "../../context/SocketProvider";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useGetChatMessagesQuery } from "../../store/api/api";
+import { GlobalContext } from "../../context/GlobalContext";
+import {
+  setClickedElement,
+  setSendFileByMe,
+} from "../../store/reducers/tmpvariable";
+import ChooseFile from "../common/FileChoose";
+import { toast } from "react-toastify";
 
 function ChatScreen() {
   const fileInputRef = useRef(null);
@@ -11,42 +18,57 @@ function ChatScreen() {
   const [messages, setMessages] = useState([]);
   const [page, setPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
+  const [toggleChooseFile, setToggleChooseFile] = useState(false);
+  const { setAxis } = useContext(GlobalContext);
   const socket = getSocket();
 
-  const { chatId, members } = useSelector((state) => state.tmp);
+  const { chatId, members,fileUploading} = useSelector((state) => state.tmp);
   const { _id } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-  const {
-    data: userchats,
-    refetch,
-    isFetching,
-  } = useGetChatMessagesQuery({ chatId, page }, { skip: !chatId });
+  const { data: userchats, refetch } = useGetChatMessagesQuery(
+    { chatId, page },
+    { skip: !chatId }
+  );
+  // Reset when chat changes
+  useEffect(() => {
+    if (userchats) {
+      dispatch(setSendFileByMe(userchats?.message));
+    }
+  }, [userchats]);
 
-  // Load new page when 'page' changes
+  useEffect(() => {
+    setPage(1);
+    setMessages([]);
+  }, [chatId]);
+
+  // Fetch messages on page or chat change
   useEffect(() => {
     if (!chatId) return;
+
     const fetchMore = async () => {
       setIsFetchingMore(true);
       const res = await refetch();
       const newMessages = res?.data?.message || [];
+
       if (newMessages.length > 0) {
         setMessages((prev) => [...newMessages, ...prev]);
       }
+
       setIsFetchingMore(false);
     };
+
     fetchMore();
   }, [page, chatId, refetch]);
 
-  useEffect(()=>{
-   setPage(1);
-  },[chatId])
-  // Handle socket new message
+  // Socket listener for real-time messages
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (data) => {
+      
       const msg = data?.message;
+      console.log("data is ",msg);
       if (msg?.chat === chatId) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -56,10 +78,19 @@ function ChatScreen() {
     return () => socket.off("NEW_MESSAGE", handleNewMessage);
   }, [socket, chatId]);
 
+  // Scroll to bottom on new message
+  useEffect(() => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Send message handler
   const sendMessage = () => {
     if (!msg.trim()) return;
 
     const allMembers = [...members, _id];
+
     socket.emit("NEW_MESSAGE", {
       chatId,
       members: allMembers,
@@ -70,62 +101,106 @@ function ChatScreen() {
   };
 
   const handleAttachmentClick = () => {
-    fileInputRef.current.click();
+    setToggleChooseFile(!toggleChooseFile);
   };
 
   const handleScroll = (e) => {
-    const scrollTop = e.target.scrollTop;
-    if (scrollTop < 15 && !isFetchingMore && userchats?.totalPage > page) {
+    if (
+      e.target.scrollTop < 15 &&
+      !isFetchingMore &&
+      userchats?.totalPage > page
+    ) {
       setPage((prev) => prev + 1);
     }
   };
 
   return (
-    <div className="flex flex-col justify-between h-[92vh] w-full bg-[#f0f3f8]">
+    <div className="flex flex-col justify-between h-[92vh] w-full bg-gray-300">
       {/* Message Area */}
-      <div className="overflow-y-scroll" onScroll={handleScroll}>
+      <div
+        className="overflow-y-scroll flex-1"
+        onScroll={handleScroll}
+        onClick={() => dispatch(setClickedElement(""))}
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
         <div className="p-3 flex flex-col gap-1">
-          {messages?.map(({ content, sender, chat }, index) =>
+          {messages.map(({ content, sender, chat, attachments }, index) =>
             chat === chatId ? (
-              <p
+              <div
                 key={index}
-                className={`font-serif px-3 py-1 rounded-md w-fit ${
+                className={`flex flex-col w-fit ${
                   _id === sender?._id
-                    ? "self-end bg-cyan-800 text-white"
-                    : "self-start bg-gray-700 text-white"
+                    ? "self-end items-end"
+                    : "self-start items-start"
                 }`}
               >
-                {content}
-              </p>
+                {/* Message Text */}
+                {
+                  content==""?"":<p
+                  className={`font-serif px-3 py-1 rounded-md ${
+                    _id === sender?._id
+                      ? "bg-cyan-800 text-white"
+                      : "bg-gray-700 text-white"
+                  }`}
+                >
+                  {content}
+                </p>
+                }
+
+                {/* Attachments */}
+                {attachments?.length > 0 &&
+                  attachments.map(({ url }, i) => (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1"
+                    >
+                      <img
+                        src={url}
+                        alt={`attachment-${i}`}
+                        className="max-w-xs rounded-md hover:opacity-90 transition"
+                      />
+                    </a>
+                  ))}
+              </div>
             ) : null
           )}
+         
           <div ref={messageEndRef} />
         </div>
       </div>
 
+      {toggleChooseFile ? (
+        <div className="flex self-end bg-transparent">
+          <ChooseFile />
+        </div>
+      ) : (
+        ""
+      )}
+
       {/* Input Area */}
-      <div className="flex items-center gap-3 p-3 bg-white border-t">
+      <div className="flex items-center gap-3 p-3 bg-transparent">
         <input
           type="text"
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
-          placeholder="Write Something..."
+          placeholder="Write something..."
           className="flex-1 p-2 rounded-full border outline-none text-sm"
         />
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          onChange={(e) => console.log("Selected file:", e.target.files[0])}
-        />
-
-        <button
+        {
+          fileUploading ? "sending.." : <button
           onClick={handleAttachmentClick}
           className="text-gray-500 hover:text-blue-500"
         >
           <Paperclip size={20} />
         </button>
+        }
 
         <button
           onClick={sendMessage}

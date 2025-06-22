@@ -65,7 +65,7 @@ function SearchUserDropDown() {
          {
           loginUserId!=_id? <div
             key={idx}
-            className="w-full px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center border-b"
+            className="w-full px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center border-b z-50"
           >
             {/* Left: Avatar and Name */}
             <div className="flex items-center gap-3">

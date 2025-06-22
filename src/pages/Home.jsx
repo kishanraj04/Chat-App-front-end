@@ -8,7 +8,10 @@ function Home() {
   return (
     <div className="grid" style={{ gridTemplateColumns: "22% 48% 30%" }}>
       {/* chat list */}
-      <div className="flex  flex-col gap-2 overflow-y-scroll border-r-[1px] h-[91vh]">
+      <div className="flex  flex-col gap-2 overflow-y-scroll border-r-[1px] h-[92vh] bg-neutral-800"  style={{
+    scrollbarWidth: "none",      
+    msOverflowStyle: "none",     
+  }}>
         
           <ChatList  />
         
