@@ -68,7 +68,6 @@ function ChatScreen() {
     const handleNewMessage = (data) => {
       
       const msg = data?.message;
-      console.log("data is ",msg);
       if (msg?.chat === chatId) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -95,6 +94,7 @@ function ChatScreen() {
       chatId,
       members: allMembers,
       message: msg,
+      loginUser:_id
     });
 
     setMsg("");

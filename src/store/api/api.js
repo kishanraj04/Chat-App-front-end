@@ -102,6 +102,14 @@ const api = createApi({
       }),
       invalidatesTags:["msg"]
     }),
+    getTotalNotification: builder.query({
+      query: (userId) => ({
+        url: `user/notificatio`,
+        credentials: "include",
+        method: "GET"
+      }),
+      invalidatesTags:["msg"]
+    }),
   }),
 });
 
@@ -119,5 +127,6 @@ export const {
   useDeleteRequestMutation,
   useGetMyChatsQuery,
   useGetChatMessagesQuery,
-  useSendAttachmentsMutation
+  useSendAttachmentsMutation,
+  useGetTotalNotificationQuery
 } = api;

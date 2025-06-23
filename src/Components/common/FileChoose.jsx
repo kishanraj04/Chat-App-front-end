@@ -73,7 +73,7 @@ function ChooseFile() {
         <input
           type="file"
           ref={videoRef}
-          accept="video/*"
+          accept="video/mp4"
           multiple
           onChange={(e) => handleFileChange(e, "Video")}
           className="hidden"

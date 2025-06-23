@@ -8,6 +8,7 @@ const initialState = {
   fileUploading: false,
   fileSendByMe: [],
   tmp: true,
+  totalNotification:0
 };
 
 const tmpvar = createSlice({
@@ -33,6 +34,10 @@ const tmpvar = createSlice({
       // console.log(action.payload);
       state.fileSendByMe = action.payload;
     },
+    setTotalNotification: (state, action) => {
+      console.log(action.payload);
+      // state.searchusername = action.payload;
+    },
   },
 });
 
@@ -44,4 +49,5 @@ export const {
   setMembers,
   setFileUploading,
   setSendFileByMe,
+  setTotalNotification
 } = tmpvar.actions;
