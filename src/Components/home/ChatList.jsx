@@ -12,28 +12,32 @@ import {
 import { getSocket } from "../../context/SocketProvider";
 import { useEffect } from "react";
 import { useState } from "react";
+import { useRef } from "react";
 
 function ChatList({ data }) {
   const { data: chat } = useGetMyChatsQuery();
   const { chatId, _id } = useSelector((state) => state.tmp);
-   const { _id:loginUserId } = useSelector((state) => state.auth);
+  const { _id: loginUserId } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [totalNotificatio, setTotalNotification] = useState([]);
   const socket = getSocket();
   const { data: notifications } = useGetTotalNotificationQuery();
-  console.log(loginUserId);
+  console.log(notifications);
+
+  const hasSetNotifications = useRef(false); // ✅ flag to track initial set
+
   useEffect(() => {
-    if (totalNotificatio?.length == 0) {
-      setTotalNotification(notifications?.totalNotification);
+    if (!hasSetNotifications.current && notifications?.totalNotification) {
+      setTotalNotification(notifications.totalNotification);
+      hasSetNotifications.current = true; // ✅ mark as set
+      console.log("Initial notification set:", notifications.totalNotification);
     }
   }, [notifications]);
-
   // console.log(notifications?.totalNotification,totalNotificatio);
+
   useEffect(() => {
     if (!socket) return;
-
     const newMessageAlert = (data) => {
-      console.log(data);
       setTotalNotification(data?.notification);
     };
 
@@ -46,10 +50,16 @@ function ChatList({ data }) {
       : member[1]?.toString();
   };
 
-  const haldleClick = (_id,members) => {
+  const haldleClick = (_id, members) => {
+    setTotalNotification([]);
+    console.log(_id);
     const oponent = getOponentUser(members);
-    // console.log("lu ", loginUserId , oponent);
-    socket.emit("clearNotification",{chatId,senderId:loginUserId,receiverId:oponent,members:[loginUserId,oponent]})
+    console.log("lu ", loginUserId, oponent);
+    socket.emit("clearNotification", {
+      chatId: _id,
+      receiverId: loginUserId,
+      members: [loginUserId, oponent],
+    });
     dispatch(setChatId(_id));
     dispatch(setMembers(members));
   };
@@ -62,7 +72,7 @@ function ChatList({ data }) {
           className={`flex items-center h-[6rem] w-full px-4 gap-4 border-t-[1px] border-b[1px] text-white font-serif ${
             chatId === _id ? "bg-blue-900" : ""
           }`}
-          onClick={()=>haldleClick(_id,members,loginUserId)}
+          onClick={() => haldleClick(_id, members, loginUserId)}
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
@@ -85,13 +95,16 @@ function ChatList({ data }) {
           <p>{name}</p>
           {/* Name + Notification */}
           <p className="text-sm text-green-500">
-            {_id.toString()==chatId?.toString()?0:(() => {
-              const oponent = getOponentUser(members);
-              const notif = totalNotificatio?.find(
-                ({ senderId }) => senderId?.toString() === oponent
-              );
-              return notif?.totalNotifaction || 0;
-            })()}
+            {_id?.toString() != chatId
+              ? (() => {
+                  const notif = totalNotificatio?.find(
+                    (n) =>
+                      n.chatId?.toString() === _id?.toString() &&
+                      n.receiverId?.toString() === loginUserId?.toString()
+                  );
+                  return notif?.totalNotifaction || "";
+                })()
+              : ""}
           </p>
         </div>
       ))}
