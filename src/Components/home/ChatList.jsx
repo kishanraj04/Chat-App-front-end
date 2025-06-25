@@ -22,7 +22,7 @@ function ChatList({ data }) {
   const [totalNotificatio, setTotalNotification] = useState([]);
   const socket = getSocket();
   const { data: notifications } = useGetTotalNotificationQuery();
-  console.log(notifications);
+  // console.log(notifications);
 
   const hasSetNotifications = useRef(false); // ✅ flag to track initial set
 
@@ -30,7 +30,7 @@ function ChatList({ data }) {
     if (!hasSetNotifications.current && notifications?.totalNotification) {
       setTotalNotification(notifications.totalNotification);
       hasSetNotifications.current = true; // ✅ mark as set
-      console.log("Initial notification set:", notifications.totalNotification);
+      // console.log("Initial notification set:", notifications.totalNotification);
     }
   }, [notifications]);
   // console.log(notifications?.totalNotification,totalNotificatio);
@@ -52,9 +52,9 @@ function ChatList({ data }) {
 
   const haldleClick = (_id, members) => {
     setTotalNotification([]);
-    console.log(_id);
+    // console.log(_id);
     const oponent = getOponentUser(members);
-    console.log("lu ", loginUserId, oponent);
+    // console.log("lu ", loginUserId, oponent);
     socket.emit("clearNotification", {
       chatId: _id,
       receiverId: loginUserId,

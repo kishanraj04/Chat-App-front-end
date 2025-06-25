@@ -10,6 +10,8 @@ import {
 } from "../../store/reducers/tmpvariable";
 import ChooseFile from "../common/FileChoose";
 import { toast } from "react-toastify";
+import { data } from "react-router-dom";
+import TypingLoader from "../loader/TypingLoader";
 
 function ChatScreen() {
   const fileInputRef = useRef(null);
@@ -22,7 +24,13 @@ function ChatScreen() {
   const { setAxis } = useContext(GlobalContext);
   const socket = getSocket();
 
-  const { chatId, members,fileUploading} = useSelector((state) => state.tmp);
+  // typing indicator
+  const [typing, setTyping] = useState(true);
+  const [imTyping, setImTyping] = useState(false);
+  const [isTyping,setIsTyping] = useState(false);
+  const timeout = useRef(null);
+
+  const { chatId, members, fileUploading } = useSelector((state) => state.tmp);
   const { _id } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -66,15 +74,31 @@ function ChatScreen() {
     if (!socket) return;
 
     const handleNewMessage = (data) => {
-      
       const msg = data?.message;
       if (msg?.chat === chatId) {
         setMessages((prev) => [...prev, msg]);
       }
     };
 
+    const startTypingHandler = (data) => {
+      console.log("start typing from: ", data);
+      setIsTyping(true);
+    };
+
+    const handleStopTyping = (data) => {
+      console.log("stop typing from: ", data);
+      setIsTyping(false);
+    };
+
     socket.on("NEW_MESSAGE", handleNewMessage);
-    return () => socket.off("NEW_MESSAGE", handleNewMessage);
+    socket.on("START_TYPING", startTypingHandler);
+    socket.on("STOP_TYPING", handleStopTyping);
+
+    return () => {
+      socket.off("NEW_MESSAGE", handleNewMessage);
+      socket.off("START_TYPING", startTypingHandler);
+      socket.off("STOP_TYPING", handleStopTyping);
+    };
   }, [socket, chatId]);
 
   // Scroll to bottom on new message
@@ -84,6 +108,8 @@ function ChatScreen() {
     }
   }, [messages]);
 
+  // typing indicator
+  console.log(isTyping);
   // Send message handler
   const sendMessage = () => {
     if (!msg.trim()) return;
@@ -94,7 +120,7 @@ function ChatScreen() {
       chatId,
       members: allMembers,
       message: msg,
-      loginUser:_id
+      loginUser: _id,
     });
 
     setMsg("");
@@ -138,17 +164,19 @@ function ChatScreen() {
                 }`}
               >
                 {/* Message Text */}
-                {
-                  content==""?"":<p
-                  className={`font-serif px-3 py-1 rounded-md ${
-                    _id === sender?._id
-                      ? "bg-cyan-800 text-white"
-                      : "bg-gray-700 text-white"
-                  }`}
-                >
-                  {content}
-                </p>
-                }
+                {content == "" ? (
+                  ""
+                ) : (
+                  <p
+                    className={`font-serif px-3 py-1 rounded-md ${
+                      _id === sender?._id
+                        ? "bg-cyan-800 text-white"
+                        : "bg-gray-700 text-white"
+                    }`}
+                  >
+                    {content}
+                  </p>
+                )}
 
                 {/* Attachments */}
                 {attachments?.length > 0 &&
@@ -170,8 +198,14 @@ function ChatScreen() {
               </div>
             ) : null
           )}
-         
+
           <div ref={messageEndRef} />
+
+          <div className="w-full flex justify-center">
+            {
+              isTyping?<TypingLoader/>:''
+            }
+          </div>
         </div>
       </div>
 
@@ -188,19 +222,42 @@ function ChatScreen() {
         <input
           type="text"
           value={msg}
-          onChange={(e) => setMsg(e.target.value)}
+          onChange={(e) => {
+            setMsg(e.target.value);
+            if (typing) {
+              socket.emit("START_TYPING", {
+                chatId,
+                members: [...members],
+              });
+              setTyping(false);
+            }
+
+            if (timeout?.current) {
+              clearTimeout(timeout?.current);
+            }
+
+            timeout.current = setTimeout(() => {
+              socket.emit("STOP_TYPING", {
+                chatId,
+                members: [...members],
+              });
+              setTyping(true);
+            }, [500]);
+          }}
           placeholder="Write something..."
           className="flex-1 p-2 rounded-full border outline-none text-sm"
         />
 
-        {
-          fileUploading ? "sending.." : <button
-          onClick={handleAttachmentClick}
-          className="text-gray-500 hover:text-blue-500"
-        >
-          <Paperclip size={20} />
-        </button>
-        }
+        {fileUploading ? (
+          "sending.."
+        ) : (
+          <button
+            onClick={handleAttachmentClick}
+            className="text-gray-500 hover:text-blue-500"
+          >
+            <Paperclip size={20} />
+          </button>
+        )}
 
         <button
           onClick={sendMessage}
