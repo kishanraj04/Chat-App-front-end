@@ -76,6 +76,7 @@ function ChatScreen() {
     const handleNewMessage = (data) => {
       const msg = data?.message;
       if (msg?.chat === chatId) {
+        dispatch(setSendFileByMe([msg]))
         setMessages((prev) => [...prev, msg]);
       }
     };

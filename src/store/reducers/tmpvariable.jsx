@@ -32,7 +32,7 @@ const tmpvar = createSlice({
     },
     setSendFileByMe: (state, action) => {
       // console.log(action.payload);
-      state.fileSendByMe = action.payload;
+      state.fileSendByMe = [...state.fileSendByMe,action.payload];
     },
     setTotalNotification: (state, action) => {
       console.log(action.payload);

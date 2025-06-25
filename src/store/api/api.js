@@ -110,6 +110,13 @@ const api = createApi({
       }),
       invalidatesTags:["msg"]
     }),
+    getFileSendByMe:builder.query({
+      query:(chatId)=>({
+        url:`user/myfiles/${chatId}`,
+        method:"GET",
+        credentials:"include"
+      })
+    })
   }),
 });
 
@@ -128,5 +135,6 @@ export const {
   useGetMyChatsQuery,
   useGetChatMessagesQuery,
   useSendAttachmentsMutation,
-  useGetTotalNotificationQuery
+  useGetTotalNotificationQuery,
+  useGetFileSendByMeQuery
 } = api;

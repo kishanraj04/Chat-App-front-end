@@ -1,24 +1,65 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useGetFileSendByMeQuery } from "../../store/api/api";
+import { getSocket } from "../../context/SocketProvider";
 
 function Profile() {
   const { avatar, user, bio, joindate } = useSelector((state) => state?.auth);
-  const { fileSendByMe } = useSelector((state) => state.tmp);
+  const { chatId } = useSelector((state) => state.tmp);
+  const dispatch = useDispatch();
 
-  // Flatten file URLs
-  const files = fileSendByMe
-    ?.map((data) => data?.attachments?.map(({ url }) => url))
-    .flat()
-    .filter(Boolean); 
+  const { data: fileSendByMe, refetch } = useGetFileSendByMeQuery(chatId, {
+    skip: !chatId,
+  });
+
+  const socket = getSocket();
+
+  const [combinedFiles, setCombinedFiles] = useState([]);
+
+  // Refetch when chatId changes
+  useEffect(() => {
+    if (chatId) {
+      refetch();
+    }
+  }, [chatId]);
+
+  // Load initial files from API response
+  useEffect(() => {
+    if (fileSendByMe?.files) {
+      const flatFiles = fileSendByMe.files
+        .map((data) => data?.attachments?.map(({ url }) => url))
+        .flat()
+        .filter(Boolean);
+      setCombinedFiles(flatFiles);
+    }
+  }, [fileSendByMe]);
+
+  // Listen to new message events for real-time file updates
+  useEffect(() => {
+    const handleNewMessage = (data) => {
+      const attachments = data?.message?.attachments;
+      if (attachments?.length > 0) {
+        const newUrls = attachments.map((a) => a.url);
+        setCombinedFiles((prev) => [...newUrls, ...prev]);
+      }
+    };
+
+    socket.on("NEW_MESSAGE", handleNewMessage);
+    return () => socket.off("NEW_MESSAGE", handleNewMessage);
+  }, [socket]);
 
   return (
-    <div className="flex flex-col items-center gap-10 font-serif font-semibold w-full  md:px-10">
+    <div className="flex flex-col items-center gap-10 font-serif font-semibold w-full md:px-10">
       {/* Profile Image and Info */}
       <div className="flex flex-col justify-center items-center gap-2">
         <div className="h-40 w-40 rounded-full overflow-hidden border shadow-md">
-          <Link to={avatar} target="_blank">
-          <img src={avatar} alt="avatar" className="h-full w-full object-cover" />
+          <Link to={avatar} target="_blank" rel="noopener noreferrer">
+            <img
+              src={avatar}
+              alt="avatar"
+              className="h-full w-full object-cover"
+            />
           </Link>
         </div>
         <p className="text-xl">{user || "Unknown"}</p>
@@ -35,20 +76,20 @@ function Profile() {
             msOverflowStyle: "none",
           }}
         >
-          <style>
-            {`div::-webkit-scrollbar { display: none; }`}
-          </style>
+          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
 
-          {files?.length === 0 ? (
-            <div className="col-span-3 text-center text-gray-500">No Files Sent</div>
+          {combinedFiles?.length === 0 ? (
+            <div className="col-span-3 text-center text-gray-500">
+              No Files Sent
+            </div>
           ) : (
-            files.map((url) => (
-              <div key={url} className="w-full">
+            combinedFiles.map((url, idx) => (
+              <div key={idx} className="w-full">
                 <Link to={url} target="_blank" rel="noopener noreferrer">
                   <img
                     src={url}
                     alt="attachment"
-                    className="h-30 w-full object-cover "
+                    className="h-30 w-full object-cover"
                   />
                 </Link>
               </div>
