@@ -68,7 +68,7 @@ const ChatHeader = () => {
 
             <CiCirclePlus
               size={"2rem"}
-              id="friendreq"
+              id="creategroup"
               onClick={(e) => {
                 dispatch(setClickedElement(e.currentTarget.id));
                 customMenuHandler(e, setAxis);
@@ -81,6 +81,7 @@ const ChatHeader = () => {
               onClick={(e) => {
                 dispatch(setClickedElement(e.currentTarget.id));
                 customMenuHandler(e, setAxis);
+                navigate("/home/Groups")
               }}
             />
 

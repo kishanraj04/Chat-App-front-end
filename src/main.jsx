@@ -27,7 +27,8 @@ const routes = createBrowserRouter([
     children: [
       { path: "/home", element: <Home /> },
       { path: "/home/Chat/:ChatId", element: <Chat /> },
-      { path: "/home/Group", element: <Group /> },
+      { path: "/home/Groups", element: <Group /> },
+      
     ],
   },
   {

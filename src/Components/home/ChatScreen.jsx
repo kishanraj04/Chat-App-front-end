@@ -28,6 +28,7 @@ function ChatScreen() {
   const [typing, setTyping] = useState(true);
   const [imTyping, setImTyping] = useState(false);
   const [isTyping,setIsTyping] = useState(false);
+  const [typedChat,setTypedChat] = useState("");
   const timeout = useRef(null);
 
   const { chatId, members, fileUploading } = useSelector((state) => state.tmp);
@@ -82,12 +83,14 @@ function ChatScreen() {
     };
 
     const startTypingHandler = (data) => {
+      setTypedChat(data?.chatId)
       console.log("start typing from: ", data);
       setIsTyping(true);
     };
 
     const handleStopTyping = (data) => {
       console.log("stop typing from: ", data);
+      setTypedChat("")
       setIsTyping(false);
     };
 
@@ -109,9 +112,8 @@ function ChatScreen() {
     }
   }, [messages]);
 
-  // typing indicator
-  console.log(isTyping);
-  // Send message handler
+  
+  
   const sendMessage = () => {
     if (!msg.trim()) return;
 
@@ -204,7 +206,7 @@ function ChatScreen() {
 
           <div className="w-full flex justify-center">
             {
-              isTyping?<TypingLoader/>:''
+              isTyping && chatId==typedChat ?<TypingLoader/>:''
             }
           </div>
         </div>

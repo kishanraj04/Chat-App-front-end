@@ -1,113 +1,135 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   useGetMyChatsQuery,
   useGetTotalNotificationQuery,
 } from "../../store/api/api";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setChatId,
-  setMembers,
-  setSearchUserName,
-} from "../../store/reducers/tmpvariable";
+import { setChatId, setMembers } from "../../store/reducers/tmpvariable";
 import { getSocket } from "../../context/SocketProvider";
-import { useEffect } from "react";
-import { useState } from "react";
-import { useRef } from "react";
 
-function ChatList({ data }) {
+function ChatList() {
   const { data: chat } = useGetMyChatsQuery();
-  const { chatId, _id } = useSelector((state) => state.tmp);
+  const { chatId } = useSelector((state) => state.tmp);
   const { _id: loginUserId } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const [totalNotificatio, setTotalNotification] = useState([]);
+  const [totalNotification, setTotalNotification] = useState([]);
+  const [newGroups, setNewGroups] = useState([]);
   const socket = getSocket();
   const { data: notifications } = useGetTotalNotificationQuery();
-  // console.log(notifications);
-
-  const hasSetNotifications = useRef(false); // ✅ flag to track initial set
+  const hasSetNotifications = useRef(false);
 
   useEffect(() => {
     if (!hasSetNotifications.current && notifications?.totalNotification) {
       setTotalNotification(notifications.totalNotification);
-      hasSetNotifications.current = true; // ✅ mark as set
-      // console.log("Initial notification set:", notifications.totalNotification);
+      hasSetNotifications.current = true;
     }
   }, [notifications]);
-  // console.log(notifications?.totalNotification,totalNotificatio);
 
   useEffect(() => {
     if (!socket) return;
+
     const newMessageAlert = (data) => {
       setTotalNotification(data?.notification);
     };
 
+    const handleGroupCreation = (newGroup) => {
+      if (!newGroup.avatar || newGroup.avatar.length === 0) {
+        newGroup.avatar = new Array(newGroup.members.length).fill("");
+      }
+      setNewGroups((prev) => [...prev, newGroup]);
+    };
+
     socket.on("NOTIFICATION", newMessageAlert);
+    socket.on("GROUP_CREATE", handleGroupCreation);
+
+    return () => {
+      socket.off("NOTIFICATION", newMessageAlert);
+      socket.off("GROUP_CREATE", handleGroupCreation);
+    };
   }, [socket]);
 
   const getOponentUser = (member) => {
-    return member[0]?.toString() != loginUserId
+    return member[0]?.toString() !== loginUserId
       ? member[0]?.toString()
       : member[1]?.toString();
   };
 
-  const haldleClick = (_id, members) => {
+  const handleClick = (_id, members) => {
     setTotalNotification([]);
-    // console.log(_id);
-    const oponent = getOponentUser(members);
-    // console.log("lu ", loginUserId, oponent);
+    const opponent = getOponentUser(members);
+
     socket.emit("clearNotification", {
       chatId: _id,
       receiverId: loginUserId,
-      members: [loginUserId, oponent],
+      members: [loginUserId, opponent],
     });
+
     dispatch(setChatId(_id));
     dispatch(setMembers(members));
   };
 
+  const allChats = [...(chat?.transformchats || []), ...newGroups];
+
   return (
     <>
-      {chat?.transformchats?.map(({ avatar, name, _id, members }) => (
-        <div
-          key={_id}
-          className={`flex items-center h-[6rem] w-full px-4 gap-4 border-t-[1px] border-b[1px] text-white font-serif ${
-            chatId === _id ? "bg-blue-900" : ""
-          }`}
-          onClick={() => haldleClick(_id, members, loginUserId)}
-          style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {/* Profile Image */}
+      {allChats.map(({ avatar, name, _id, members, groupname, groupchat }) => {
+        const avatars = Array.isArray(avatar) ? avatar : [avatar];
+        const notifCount = totalNotification?.find(
+          (n) =>
+            n.chatId?.toString() === _id?.toString() &&
+            n.receiverId?.toString() === loginUserId?.toString()
+        )?.totalNotifaction;
+
+        return (
           <div
-            className="h-16 w-16 rounded-full overflow-hidden flex-shrink-0"
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
+            key={_id}
+            className={`flex items-center h-[6rem] w-full px-4 gap-4 border-t border-b text-white font-serif ${
+              chatId === _id ? "bg-blue-900" : ""
+            }`}
+            onClick={() => handleClick(_id, members)}
           >
-            <img
-              src={avatar[0]}
-              alt={name}
-              className="h-full w-full object-cover"
-            />
+            {/* Avatars */}
+            {groupchat ? (
+              <div className="relative h-12 w-[60px] flex items-center">
+                {avatars.slice(0, 2).map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`member-${idx}`}
+                    className="h-10 w-10 rounded-full object-cover border-2 border-white absolute"
+                    style={{
+                      left: `${idx * 20}px`,
+                      zIndex: 2 - idx,
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="h-16 w-16 rounded-full overflow-hidden flex-shrink-0">
+                {avatars[0] ? (
+                  <img
+                    src={avatars[0]}
+                    alt={name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full rounded-full bg-gray-400" />
+                )}
+              </div>
+            )}
+
+            {/* Name + Notifications */}
+            <div className="flex-1">
+              <p className="text-base font-semibold truncate">
+                {groupchat ? groupname : name}
+              </p>
+              {_id !== chatId && notifCount > 0 && (
+                <p className="text-sm text-green-400">{notifCount}</p>
+              )}
+            </div>
           </div>
-          <p>{name}</p>
-          {/* Name + Notification */}
-          <p className="text-sm text-green-500">
-            {_id?.toString() != chatId
-              ? (() => {
-                  const notif = totalNotificatio?.find(
-                    (n) =>
-                      n.chatId?.toString() === _id?.toString() &&
-                      n.receiverId?.toString() === loginUserId?.toString()
-                  );
-                  return notif?.totalNotifaction || "";
-                })()
-              : ""}
-          </p>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

@@ -116,6 +116,22 @@ const api = createApi({
         method:"GET",
         credentials:"include"
       })
+    }),
+    getMyFriends:builder.query({
+      query:(chatId)=>({
+        url:`user/myfriends`,
+        method:"GET",
+        credentials:"include"
+      })
+    }),
+    createGroup:builder.mutation({
+      query:(data)=>({
+        url:"chat/group-chat",
+        credentials:"include",
+        method:"POST",
+        body:data
+      }),
+      invalidatesTags:["chat"]
     })
   }),
 });
@@ -136,5 +152,7 @@ export const {
   useGetChatMessagesQuery,
   useSendAttachmentsMutation,
   useGetTotalNotificationQuery,
-  useGetFileSendByMeQuery
+  useGetFileSendByMeQuery,
+  useGetMyFriendsQuery,
+  useCreateGroupMutation
 } = api;
