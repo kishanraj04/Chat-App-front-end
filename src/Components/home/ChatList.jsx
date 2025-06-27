@@ -18,6 +18,7 @@ function ChatList() {
   const { data: notifications } = useGetTotalNotificationQuery();
   const hasSetNotifications = useRef(false);
 
+  // Set initial notifications from server
   useEffect(() => {
     if (!hasSetNotifications.current && notifications?.totalNotification) {
       setTotalNotification(notifications.totalNotification);
@@ -25,10 +26,12 @@ function ChatList() {
     }
   }, [notifications]);
 
+  // Socket listeners
   useEffect(() => {
     if (!socket) return;
 
     const newMessageAlert = (data) => {
+      console.log("NOTIFICATION:", data?.notification);
       setTotalNotification(data?.notification);
     };
 
@@ -39,12 +42,35 @@ function ChatList() {
       setNewGroups((prev) => [...prev, newGroup]);
     };
 
+    const handleGroupNotification = (incoming) => {
+      console.log("GROUP_NOTIFICATION:", incoming);
+      setTotalNotification((prev) => {
+        const exists = prev.find(
+          (n) =>
+            n.chatId?.toString() === incoming.chatId?.toString() &&
+            n.receiverId?.toString() === incoming.receiverId?.toString()
+        );
+        if (exists) {
+          return prev.map((n) =>
+            n.chatId?.toString() === incoming.chatId?.toString() &&
+            n.receiverId?.toString() === incoming.receiverId?.toString()
+              ? { ...n, totalNotifaction: incoming.totalNotifaction }
+              : n
+          );
+        } else {
+          return [...prev, incoming];
+        }
+      });
+    };
+
     socket.on("NOTIFICATION", newMessageAlert);
     socket.on("GROUP_CREATE", handleGroupCreation);
+    socket.on("GROUP_NOTIFICATION", handleGroupNotification);
 
     return () => {
       socket.off("NOTIFICATION", newMessageAlert);
       socket.off("GROUP_CREATE", handleGroupCreation);
+      socket.off("GROUP_NOTIFICATION", handleGroupNotification);
     };
   }, [socket]);
 
@@ -54,15 +80,22 @@ function ChatList() {
       : member[1]?.toString();
   };
 
-  const handleClick = (_id, members) => {
+  const handleClick = (_id, members, groupchat) => {
     setTotalNotification([]);
-    const opponent = getOponentUser(members);
 
-    socket.emit("clearNotification", {
-      chatId: _id,
-      receiverId: loginUserId,
-      members: [loginUserId, opponent],
-    });
+    if (groupchat) {
+      socket.emit("clearNotification", {
+        chatId: _id,
+        receiverId: loginUserId,
+      });
+    } else {
+      const opponent = getOponentUser(members);
+      socket.emit("clearNotification", {
+        chatId: _id,
+        receiverId: loginUserId,
+        members: [loginUserId, opponent],
+      });
+    }
 
     dispatch(setChatId(_id));
     dispatch(setMembers(members));
@@ -86,7 +119,7 @@ function ChatList() {
             className={`flex items-center h-[6rem] w-full px-4 gap-4 border-t border-b text-white font-serif ${
               chatId === _id ? "bg-blue-900" : ""
             }`}
-            onClick={() => handleClick(_id, members)}
+            onClick={() => handleClick(_id, members, groupchat)}
           >
             {/* Avatars */}
             {groupchat ? (

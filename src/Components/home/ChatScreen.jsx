@@ -84,12 +84,10 @@ function ChatScreen() {
 
     const startTypingHandler = (data) => {
       setTypedChat(data?.chatId)
-      console.log("start typing from: ", data);
       setIsTyping(true);
     };
 
     const handleStopTyping = (data) => {
-      console.log("stop typing from: ", data);
       setTypedChat("")
       setIsTyping(false);
     };
