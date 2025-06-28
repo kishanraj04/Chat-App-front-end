@@ -9,7 +9,9 @@ const initialState = {
   fileSendByMe: [],
   tmp: true,
   totalNotification:0,
-  clickedGroup:""
+  clickedGroup:"",
+  isAddInGroup:true,
+  currentGrousMembers:[],
 };
 
 const tmpvar = createSlice({
@@ -44,6 +46,13 @@ const tmpvar = createSlice({
       state.clickedGroup = action.payload
       // state.searchusername = action.payload;
     },
+     setIsAddInGroup: (state, action) => {
+      state.isAddInGroup = action.payload
+      // state.searchusername = action.payload;
+    },
+    currentGrousMembers:(state,action)=>{
+      state.currentGrousMembers = action.payload
+    }
   },
 });
 
@@ -56,5 +65,7 @@ export const {
   setFileUploading,
   setSendFileByMe,
   setTotalNotification,
-  setClickedGroupId
+  setClickedGroupId,
+  setIsAddInGroup,
+  currentGrousMembers
 } = tmpvar.actions;

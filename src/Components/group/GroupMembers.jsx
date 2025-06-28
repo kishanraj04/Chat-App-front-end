@@ -5,7 +5,7 @@ import { useGetGroupDataQuery, useGetMyChatsQuery } from "../../store/api/api";
 import { getSocket } from "../../context/SocketProvider";
 import { useState } from "react";
 import { useEffect } from "react";
-import { setClickedGroupId } from "../../store/reducers/tmpvariable";
+import { currentGrousMembers, setClickedGroupId } from "../../store/reducers/tmpvariable";
 
 function GroupMembers() {
   const { _id: loginUserId } = useSelector((state) => state.auth);
@@ -14,7 +14,7 @@ function GroupMembers() {
   const socket = getSocket();
   const dispatch = useDispatch();
 
-
+ 
 
   useEffect(() => {
     if (!socket) return;
@@ -25,7 +25,6 @@ function GroupMembers() {
       }
       setNewGroups((prev) => [...prev, newGroup]);
     };
-    console.log("rimgon ");
     const handleNewNotification = (newNotification) => {
       console.log("noti ", newNotification);
     };
@@ -44,8 +43,12 @@ function GroupMembers() {
     ...newGroups,
   ];
 
+  useEffect(()=>{
+    dispatch(currentGrousMembers(groupChats))
+  },[groupChats])
+
   return (
-    <div className="bg-gray-900 w-full h-[92vh]">
+    <div className="bg-gray-900 w-full h-[100vh]">
       {groupChats.length === 0 ? (
         <p className="text-center text-gray-400">No Groups Found</p>
       ) : (

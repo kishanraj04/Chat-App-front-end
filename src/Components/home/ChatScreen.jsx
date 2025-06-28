@@ -10,7 +10,6 @@ import {
 } from "../../store/reducers/tmpvariable";
 import ChooseFile from "../common/FileChoose";
 import { toast } from "react-toastify";
-import { data } from "react-router-dom";
 import TypingLoader from "../loader/TypingLoader";
 
 function ChatScreen() {
@@ -24,11 +23,10 @@ function ChatScreen() {
   const { setAxis } = useContext(GlobalContext);
   const socket = getSocket();
 
-  // typing indicator
   const [typing, setTyping] = useState(true);
   const [imTyping, setImTyping] = useState(false);
-  const [isTyping,setIsTyping] = useState(false);
-  const [typedChat,setTypedChat] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [typedChat, setTypedChat] = useState("");
   const timeout = useRef(null);
 
   const { chatId, members, fileUploading } = useSelector((state) => state.tmp);
@@ -39,7 +37,7 @@ function ChatScreen() {
     { chatId, page },
     { skip: !chatId }
   );
-  // Reset when chat changes
+
   useEffect(() => {
     if (userchats) {
       dispatch(setSendFileByMe(userchats?.message));
@@ -51,7 +49,6 @@ function ChatScreen() {
     setMessages([]);
   }, [chatId]);
 
-  // Fetch messages on page or chat change
   useEffect(() => {
     if (!chatId) return;
 
@@ -70,48 +67,80 @@ function ChatScreen() {
     fetchMore();
   }, [page, chatId, refetch]);
 
-  // Socket listener for real-time messages
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (data) => {
       const msg = data?.message;
       if (msg?.chat === chatId) {
-        dispatch(setSendFileByMe([msg]))
+        dispatch(setSendFileByMe([msg]));
         setMessages((prev) => [...prev, msg]);
       }
     };
 
     const startTypingHandler = (data) => {
-      setTypedChat(data?.chatId)
+      setTypedChat(data?.chatId);
       setIsTyping(true);
     };
 
-    const handleStopTyping = (data) => {
-      setTypedChat("")
+    const handleStopTyping = () => {
+      setTypedChat("");
       setIsTyping(false);
     };
+
+    const handleDeleteUserAlert = ({ updatedGroup, removedUser, chatId: removedFrom }) => {
+      if (removedUser?.name && removedFrom === chatId) {
+        toast.info(`${removedUser.name} has been removed from the group`);
+
+        // Add system message to chat
+        const systemMsg = {
+          _id: `sys-${Date.now()}`,
+          content: `👋 ${removedUser.name} has been removed from the group.`,
+          chat: removedFrom,
+          system: true,
+          createdAt: new Date().toISOString(),
+        };
+
+        setMessages((prev) => [...prev, systemMsg]);
+      }
+    };
+
+    const handleNewMemberAdded = async({chatId,name})=>{
+      console.log(chatId , name);
+         const systemMsg = {
+          _id: `sys-${Date.now()}`,
+          content: `👋 ${name} has been added to group.`,
+          chat: chatId,
+          system: true,
+          createdAt: new Date().toISOString(),
+        };
+        console.log("added");
+        setMessages((prev) => [...prev, systemMsg]);
+    }
 
     socket.on("NEW_MESSAGE", handleNewMessage);
     socket.on("START_TYPING", startTypingHandler);
     socket.on("STOP_TYPING", handleStopTyping);
-
+    socket.on("DELETE_MEMBER", handleDeleteUserAlert);
+    socket.on("NEW_MEMBER_ADDED",handleNewMemberAdded)
     return () => {
       socket.off("NEW_MESSAGE", handleNewMessage);
       socket.off("START_TYPING", startTypingHandler);
       socket.off("STOP_TYPING", handleStopTyping);
+      socket.off("DELETE_MEMBER", handleDeleteUserAlert);
+       socket.off("DELETE_MEMBER", handleDeleteUserAlert);
+    socket.off("NEW_MEMBER_ADDED",handleNewMemberAdded)
     };
   }, [socket, chatId]);
 
-  // Scroll to bottom on new message
+  console.log(messages);
+
   useEffect(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  
-  
   const sendMessage = () => {
     if (!msg.trim()) return;
 
@@ -154,68 +183,66 @@ function ChatScreen() {
         }}
       >
         <div className="p-3 flex flex-col gap-1">
-          {messages.map(({ content, sender, chat, attachments }, index) =>
+          {messages.map(({ content, sender, chat, attachments, system }, index) =>
             chat === chatId ? (
               <div
                 key={index}
                 className={`flex flex-col w-fit ${
-                  _id === sender?._id
+                  system
+                    ? "self-center items-center"
+                    : _id === sender?._id
                     ? "self-end items-end"
                     : "self-start items-start"
                 }`}
               >
-                {/* Message Text */}
-                {content == "" ? (
-                  ""
+                {system ? (
+                  <p className="text-xs text-gray-500 italic">{content}</p>
                 ) : (
-                  <p
-                    className={`font-serif px-3 py-1 rounded-md ${
-                      _id === sender?._id
-                        ? "bg-cyan-800 text-white"
-                        : "bg-gray-700 text-white"
-                    }`}
-                  >
-                    {content}
-                  </p>
+                  <>
+                    {content && (
+                      <p
+                        className={`font-serif px-3 py-1 rounded-md ${
+                          _id === sender?._id
+                            ? "bg-cyan-800 text-white"
+                            : "bg-gray-700 text-white"
+                        }`}
+                      >
+                        {content}
+                      </p>
+                    )}
+                    {attachments?.length > 0 &&
+                      attachments.map(({ url }, i) => (
+                        <a
+                          key={i}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1"
+                        >
+                          <img
+                            src={url}
+                            alt={`attachment-${i}`}
+                            className="max-w-xs rounded-md hover:opacity-90 transition"
+                          />
+                        </a>
+                      ))}
+                  </>
                 )}
-
-                {/* Attachments */}
-                {attachments?.length > 0 &&
-                  attachments.map(({ url }, i) => (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1"
-                    >
-                      <img
-                        src={url}
-                        alt={`attachment-${i}`}
-                        className="max-w-xs rounded-md hover:opacity-90 transition"
-                      />
-                    </a>
-                  ))}
               </div>
             ) : null
           )}
 
           <div ref={messageEndRef} />
-
           <div className="w-full flex justify-center">
-            {
-              isTyping && chatId==typedChat ?<TypingLoader/>:''
-            }
+            {isTyping && chatId === typedChat && <TypingLoader />}
           </div>
         </div>
       </div>
 
-      {toggleChooseFile ? (
+      {toggleChooseFile && (
         <div className="flex self-end bg-transparent">
           <ChooseFile />
         </div>
-      ) : (
-        ""
       )}
 
       {/* Input Area */}
@@ -233,9 +260,7 @@ function ChatScreen() {
               setTyping(false);
             }
 
-            if (timeout?.current) {
-              clearTimeout(timeout?.current);
-            }
+            if (timeout?.current) clearTimeout(timeout?.current);
 
             timeout.current = setTimeout(() => {
               socket.emit("STOP_TYPING", {
@@ -243,7 +268,7 @@ function ChatScreen() {
                 members: [...members],
               });
               setTyping(true);
-            }, [500]);
+            }, 500);
           }}
           placeholder="Write something..."
           className="flex-1 p-2 rounded-full border outline-none text-sm"
